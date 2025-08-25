@@ -1,17 +1,17 @@
 from typing import Optional
 from beanie import init_beanie
-from fastapi import FastAPI , HTTPException
+from fastapi import Depends, FastAPI , HTTPException, Query
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from models import Create_user, Products, SigninPayload,User
-from responses.user import AuthResponse, UserResponse
-from utils.security import create_access_token, hash_password, verify_password
+from models import AccessControl, Create_user, Products, SigninPayload,User
+from responses.user import AuthResponse, UserJWTtoken, UserResponse
+from utils.security import create_access_token, get_current_user, hash_password, verify_password
 
 app = FastAPI()
 @app.on_event("startup")
 async def app_init():
     client = AsyncIOMotorClient("mongodb://localhost:27017")
-    await init_beanie(database= client.project1,document_models=[User])
+    await init_beanie(database= client.project1,document_models=[User,Products])
     print("DB connection successfull")
 
 
@@ -48,6 +48,8 @@ async def sign_up(payload:Create_user):
         role= payload.role
     )
     await new_user.insert()
+    access_control = AccessControl(userid= new_user.id)
+    await access_control.insert()
     access_token = create_access_token(data={"email": payload.email})
     response = AuthResponse(
             token= access_token,
@@ -62,12 +64,20 @@ async def sign_up(payload:Create_user):
     return response
 
 @app.post("/create-product")
-async def create_product(product :Products):
-    await product.insert()
-    return (product)
+async def create_product(
+    product :Products,
+    current_user: UserJWTtoken = Depends(get_current_user)
+    ):
+    if current_user.role != "seller":
+        raise HTTPException(status_code=404, detail="Only sellers can add new products")
+    
+    new_product = Products(**product.dict())
+    await new_product.insert()
+    return (new_product)
 
-# @app.post("/get-all-products")
-# async def get_all_products(
-#     search: Optional[str] = Query(None)
-# ):
+@app.post("/get-all-products")
+async def get_all_products(
+    search: Optional[str] = Query(None)
+):
+    await Products.get_all()
     

@@ -11,3 +11,6 @@ class UserResponse(BaseModel):
 class AuthResponse(BaseModel):
     token: str
     user: UserResponse
+
+class UserJWTtoken(BaseModel):
+    _id: str

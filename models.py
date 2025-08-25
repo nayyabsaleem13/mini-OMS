@@ -31,3 +31,9 @@ class Products(Document):
     title: str
     vendor: str
     variant: List[Variants]
+
+class AccessControl(Document):
+    userid: str
+    storeid: str
+    accountid: str
+    
