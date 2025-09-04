@@ -38,4 +38,3 @@ async def get_current_user( credentials: HTTPAuthorizationCredentials = Depends(
         return user
     except PyJWTError as e:
         raise HTTPException(status_code=401, detail= "Token could not be verified",headers={"WWW.Authenticate":"Bearer"})
-

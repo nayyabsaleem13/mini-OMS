@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, EmailStr, Field
 
@@ -10,10 +10,10 @@ class User(Document):
     password: str
     role: str
 
-class Create_user(BaseModel):
+class CreateUser(BaseModel):
     name: str 
     phone: int
-    email: EmailStr = Field(...,unique = True)
+    email: EmailStr
     password: str
     role: str
 
@@ -29,11 +29,12 @@ class Variants(BaseModel):
 
 class Products(Document):
     title: str
-    vendor: str
+    vendor: Optional[str] = None
     variant: List[Variants]
 
 class AccessControl(Document):
-    userid: str
-    storeid: str
-    accountid: str
+    userid: PydanticObjectId
+    storeid: Optional[PydanticObjectId] = None
+    accountid: Optional[PydanticObjectId] = None
+
     
