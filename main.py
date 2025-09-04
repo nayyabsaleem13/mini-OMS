@@ -1,7 +1,7 @@
 from typing import List, Optional
 from beanie import init_beanie
 from fastapi import Depends, FastAPI , HTTPException, Query
-from fastapi_pagination import Page, add_pagination, paginate
+from fastapi_pagination import Page, Params, add_pagination, paginate
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from models import AccessControl, CreateUser, Products, SigninPayload, User
@@ -83,13 +83,25 @@ async def create_product(
     return product
 
 
+# @app.get("/get-all-products", response_model=Page[Products])
+# async def get_all_products(search: Optional[str] = Query(None)):
+#     query = {}
+#     if search:
+#         query = {"title": {"$regex": search, "$options": "i"}}
+    
+#     products = await Products.find(query).to_list()
+#     return paginate(products)
+
+    
 @app.get("/get-all-products", response_model=Page[Products])
-async def get_all_products(search: Optional[str] = Query(None)):
+async def get_all_products(
+    search: Optional[str] = Query(None),
+    params: Params = Depends()   # automatically gives ?page=1&size=50
+):
     query = {}
     if search:
         query = {"title": {"$regex": search, "$options": "i"}}
-    
-    products = await Products.find(query).to_list()
-    return paginate(products)
 
-    
+    products = await Products.find(query).to_list()
+    return paginate(products, params)
+
